@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Media;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using MetroFramework.Forms;
 using MetroFramework.Interfaces;
@@ -207,26 +208,23 @@ namespace MetroFramework
                 _control.BringToFront();
                 _control.SetDefaultButton();
 
-                Action<MetroMessageBoxControl> _delegate = new Action<MetroMessageBoxControl>(ModalState);
-                IAsyncResult _asyncresult = _delegate.BeginInvoke(_control, null, _delegate);
+                var _taskresult = Task.Run(() => ModalState(_control));
                 bool _cancelled = false;
 
                 try
                 {
-                    while (!_asyncresult.IsCompleted)
+                    while (!_taskresult.IsCompleted)
                     { Thread.Sleep(1); Application.DoEvents(); }
                 }
                 catch 
                 {
                     _cancelled = true;
 
-                    if (!_asyncresult.IsCompleted)
+                    if (!_taskresult.IsCompleted)
                     {
-                        try { _asyncresult = null; }
+                        try { _taskresult = null; }
                         catch { }
                     }
-
-                    _delegate = null;
                 }
 
                 if (!_cancelled)
